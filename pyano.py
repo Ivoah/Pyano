@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
+import mido
 import pygame
-import pygame.midi
+import pygame.time
 
 from pygame.locals import *
-
-KEY_DOWN = 144
-KEY_UP = 128
 
 TIME_SCALE = 5
 
@@ -14,7 +12,6 @@ whites = [0, 2, 4, 5, 7, 9, 11]
 blacks = [1, 3, 6, 8, 10]
 
 pygame.init()
-pygame.midi.init()
 
 def border_box(size, border, col1=(255, 255, 255), col2=(0, 0, 0)):
     s = pygame.Surface(size)
@@ -45,8 +42,29 @@ def draw_octave(size, highlights=[]):
     return s
 
 window = pygame.display.set_mode((640, 480))
-print(f'Using {pygame.midi.get_device_info(pygame.midi.get_default_input_id())}')
-keyb = pygame.midi.Input(pygame.midi.get_default_input_id())
+keyb = mido.open_input()
+clock = pygame.time.Clock()
+
+midi_file = mido.MidiFile('Still Alive.mid')
+song = []
+pending_notes = {}
+cur_time = 0
+for msg in midi_file:
+    if msg.is_meta:
+        continue
+
+    cur_time += msg.time
+    if msg.type == 'note_on' and msg.velocity > 0:
+        pending_notes[(msg.channel, msg.note)] = cur_time
+    elif msg.type == 'note_off' or msg.type == 'note_on' and msg.velocity == 0:
+        song.append({
+            'note': msg.note,
+            'channel': msg.channel,
+            'start': pending_notes[(msg.channel, msg.note)]*1000,
+            'stop': cur_time*1000
+        })
+
+song = sorted(song, key=lambda note: note['start'])
 
 notes_played = []
 
@@ -57,32 +75,33 @@ try:
             if (event.type == KEYDOWN and event.mod == 1024 and event.key == 113) or event.type == QUIT:
                 running = False
 
-        if keyb.poll():
-            msg, time = keyb.read(1)[0]
-            print(msg)
-            note = msg[1] - 60
-            if msg[0] == KEY_DOWN:
-                #notes_played.append([note, time, None])
-                notes_played.append([note, pygame.midi.time(), None])
-            elif msg[0] == KEY_UP:
-                for n in notes_played:
-                    if n[0] == note and n[2] is None:
-                        n[2] = pygame.midi.time()
+        msg = keyb.poll()
+        if msg:
+            if msg.type == 'note_on' and msg.velocity > 0:
+                notes_played.append({
+                    'note': msg.note - 60,
+                    'channel': msg.channel,
+                    'start': pygame.time.get_ticks(),
+                    'stop': None
+                })
+            elif msg.type == 'note_off' or msg.type == 'note_on' and msg.velocity == 0:
+                for note in notes_played:
+                    if note['note'] == msg.note - 60 and note['stop'] is None:
+                        note['stop'] = pygame.time.get_ticks()
 
         window.fill((0, 255, 255))
-        window.blit(draw_octave((640, 480/3), [note[0] for note in notes_played if note[2] is None]), (0, 480*2/3))
+        window.blit(draw_octave((640, 480/3), [note['note'] for note in notes_played if note['stop'] is None]), (0, 480*2/3))
 
         hit_list = []
-        for note in sorted(notes_played, key=lambda n: n[1]):
-            if note[2] is not None and note[2] < (pygame.midi.time() - (480*2/3)*TIME_SCALE): hit_list.append(note)
-            s = border_box((key_width(note[0])*640, ((note[2] or pygame.midi.time()) - note[1])/TIME_SCALE), 5, col1=(255, 255, 224))
-            window.blit(s, (key_pos(note[0])*640, 480*2/3 + (note[1] - pygame.midi.time())/TIME_SCALE))
+        for note in sorted(notes_played, key=lambda n: n['start']):
+            if note['stop'] is not None and note['stop'] < (pygame.time.get_ticks() - (480*2/3)*TIME_SCALE): hit_list.append(note)
+            s = border_box((key_width(note['note'])*640, ((note['stop'] or pygame.time.get_ticks()) - note['start'])/TIME_SCALE), 5, col1=(255, 255, 224))
+            window.blit(s, (key_pos(note['note'])*640, 480*2/3 + (note['start'] - pygame.time.get_ticks())/TIME_SCALE))
 
         for note in hit_list:
             notes_played.remove(note)
 
         pygame.display.update()
+        clock.tick(60)
 finally:
-    keyb.close()
-    pygame.midi.quit()
     pygame.quit()
