@@ -1,8 +1,8 @@
 import pygame
 
-lerp = lambda a, b, r: a + (b - a)*r
-
 def fill_gradient(surface, c1, c2, rect=None):
+    lerp = lambda a, b, r: a + (b - a)*r
+
     if rect is None: rect = surface.get_rect()
 
     for column in range(rect.width):
