@@ -2,24 +2,21 @@
 
 import mido
 import pygame
-import pygame.time
 
 from pygame.locals import *
 
 from util import *
 
-TIME_SCALE = 5
-
-channel_colors = [
-    ((0x5a, 0x9f, 0xd4), (0x30, 0x69, 0x98)),
-    ((0xff, 0xd4, 0x3b), (0xff, 0xe8, 0x73))
-]
+OCTAVE_RANGE = [3, 4, 5]
+WIDTH = 640
+HEIGHT = 480
 
 pygame.init()
 
-window = pygame.display.set_mode((640, 480))
+window = pygame.display.set_mode((WIDTH, HEIGHT))
 keyb = mido.open_input()
 clock = pygame.time.Clock()
+font = pygame.font.SysFont('Helvetica', 12)
 
 midi_file = mido.MidiFile('Still Alive.mid')
 song = []
@@ -66,18 +63,25 @@ try:
                         note['stop'] = pygame.time.get_ticks()
 
         window.fill((0, 255, 255))
-        window.blit(draw_octave((640, 480/3), 5, [note['note'] for note in notes_played if note['stop'] is None]), (0, 480*2/3))
+        for octave in OCTAVE_RANGE:
+            window.blit(draw_octave((WIDTH/len(OCTAVE_RANGE), HEIGHT/3), octave, [note['note'] for note in notes_played if note['stop'] is None]), ((octave - OCTAVE_RANGE[0])*WIDTH/len(OCTAVE_RANGE), HEIGHT*2/3))
 
         hit_list = []
         for note in sorted(notes_played, key=lambda n: n['start']):
-            if note['stop'] is not None and note['stop'] < (pygame.time.get_ticks() - (480*2/3)*TIME_SCALE): hit_list.append(note)
-            s = border_box((key_width(note['note'])*640, ((note['stop'] or pygame.time.get_ticks()) - note['start'])/TIME_SCALE), 5, col1=channel_colors[note['channel']])
-            window.blit(s, (key_pos(note['note'])*640, 480*2/3 + (note['start'] - pygame.time.get_ticks())/TIME_SCALE))
+            if note['stop'] is not None and note['stop'] < (pygame.time.get_ticks() - (HEIGHT*2/3)*TIME_SCALE): hit_list.append(note)
+            s = border_box((key_width(note['note'])*WIDTH, ((note['stop'] or pygame.time.get_ticks()) - note['start'])/TIME_SCALE), 5, col1=channel_colors[note['channel']])
+            window.blit(s, (key_pos(note['note'])*WIDTH, HEIGHT*2/3 + (note['start'] - pygame.time.get_ticks())/TIME_SCALE))
 
         for note in hit_list:
             notes_played.remove(note)
 
-        pygame.display.update()
+        for note in song:
+            if note_visible(note, pygame.time.get_ticks(), HEIGHT*2/3):
+                window.blit(*draw_note(note, pygame.time.get_ticks(), WIDTH, HEIGHT*2/3))
+
+        window.blit(font.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))
+
+        pygame.display.flip()
         clock.tick(60)
 finally:
     pygame.quit()

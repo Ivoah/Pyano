@@ -1,5 +1,12 @@
 import pygame
 
+TIME_SCALE = 5
+
+channel_colors = [
+    ((0xff, 0xe8, 0x73), (0xff, 0xd4, 0x3b)),
+    ((0x5a, 0x9f, 0xd4), (0x30, 0x69, 0x98))
+]
+
 def fill_gradient(surface, c1, c2, rect=None):
     lerp = lambda a, b, r: a + (b - a)*r
 
@@ -44,9 +51,17 @@ def key_width(key):
 def draw_octave(size, octave, highlights=[]):
     s = pygame.Surface(size)
     for key in whites:
-        key_surf = border_box((size[0]*key_width(key), size[1]), 5, col1=(255, 255, 224) if key + octave*12 in highlights else (255, 255, 255))
+        key_surf = border_box((size[0]*key_width(key), size[1]), 3, col1=(255, 255, 224) if key + octave*12 in highlights else (255, 255, 255))
         s.blit(key_surf, (size[0]*key_pos(key), 0))
     for key in blacks:
-        key_surf = border_box((size[0]*key_width(key), size[1]*2/3), 5, col1=(255, 255, 224) if key + octave*12 in highlights else (0, 0, 0))
+        key_surf = border_box((size[0]*key_width(key), size[1]*2/3), 3, col1=(255, 255, 224) if key + octave*12 in highlights else (0, 0, 0))
         s.blit(key_surf, (size[0]*key_pos(key), 0))
     return s
+
+def note_visible(note, time, vh):
+    return note['stop'] > time and (note['start'] - time)/TIME_SCALE < vh
+
+def draw_note(note, time, width, base):
+    s = border_box((key_width(note['note'])*width, (note['stop'] - note['start'])/TIME_SCALE), 5, col1=channel_colors[note['channel']])
+    pos = (key_pos(note['note'])*width, base - (note['start'] - time)/TIME_SCALE)
+    return s, pos
