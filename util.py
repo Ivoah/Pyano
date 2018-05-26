@@ -60,8 +60,3 @@ def draw_octave(size, octave, highlights=[]):
 
 def note_visible(note, time, vh):
     return note['stop'] > time and (note['start'] - time)/TIME_SCALE < vh
-
-def draw_note(note, time, width, base):
-    s = border_box((key_width(note['note'])*width, (note['stop'] - note['start'])/TIME_SCALE), 5, col1=channel_colors[note['channel']])
-    pos = (key_pos(note['note'])*width, base - (note['stop'] - time)/TIME_SCALE)
-    return s, pos

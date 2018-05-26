@@ -76,7 +76,8 @@ try:
 
         for note in song:
             if note_visible(note, pygame.time.get_ticks(), HEIGHT*2/3):
-                window.blit(*draw_note(note, pygame.time.get_ticks(), WIDTH, HEIGHT*2/3))
+                s = border_box((key_width(note['note'])*WIDTH/len(OCTAVE_RANGE), (note['stop'] - note['start'])/TIME_SCALE), 3, col1=channel_colors[note['channel']])
+                window.blit(s, (((note['note']//12 - OCTAVE_RANGE[0]) + key_pos(note['note']))*WIDTH/len(OCTAVE_RANGE), HEIGHT*2/3 - (note['stop'] - pygame.time.get_ticks())/TIME_SCALE))
 
         for octave in OCTAVE_RANGE:
             window.blit(draw_octave((WIDTH/len(OCTAVE_RANGE), HEIGHT/3), octave, [note['note'] for note in notes_played if note['stop'] is None]), ((octave - OCTAVE_RANGE[0])*WIDTH/len(OCTAVE_RANGE), HEIGHT*2/3))
