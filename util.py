@@ -63,5 +63,5 @@ def note_visible(note, time, vh):
 
 def draw_note(note, time, width, base):
     s = border_box((key_width(note['note'])*width, (note['stop'] - note['start'])/TIME_SCALE), 5, col1=channel_colors[note['channel']])
-    pos = (key_pos(note['note'])*width, base - (note['start'] - time)/TIME_SCALE)
+    pos = (key_pos(note['note'])*width, base - (note['stop'] - time)/TIME_SCALE)
     return s, pos

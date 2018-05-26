@@ -15,6 +15,7 @@ pygame.init()
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 keyb = mido.open_input()
+synth = mido.open_output()
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Helvetica', 12)
 
@@ -63,8 +64,6 @@ try:
                         note['stop'] = pygame.time.get_ticks()
 
         window.fill((0, 255, 255))
-        for octave in OCTAVE_RANGE:
-            window.blit(draw_octave((WIDTH/len(OCTAVE_RANGE), HEIGHT/3), octave, [note['note'] for note in notes_played if note['stop'] is None]), ((octave - OCTAVE_RANGE[0])*WIDTH/len(OCTAVE_RANGE), HEIGHT*2/3))
 
         hit_list = []
         for note in sorted(notes_played, key=lambda n: n['start']):
@@ -78,6 +77,9 @@ try:
         for note in song:
             if note_visible(note, pygame.time.get_ticks(), HEIGHT*2/3):
                 window.blit(*draw_note(note, pygame.time.get_ticks(), WIDTH, HEIGHT*2/3))
+
+        for octave in OCTAVE_RANGE:
+            window.blit(draw_octave((WIDTH/len(OCTAVE_RANGE), HEIGHT/3), octave, [note['note'] for note in notes_played if note['stop'] is None]), ((octave - OCTAVE_RANGE[0])*WIDTH/len(OCTAVE_RANGE), HEIGHT*2/3))
 
         window.blit(font.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))
 
