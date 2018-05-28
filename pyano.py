@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import mido
 import pygame
 
@@ -19,7 +20,7 @@ synth = mido.open_output()
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Helvetica', 12)
 
-midi_file = mido.MidiFile('/Users/ivo/Music/MIDI/Still Alive.mid')
+midi_file = mido.MidiFile(sys.argv[1])
 song = []
 pending_notes = {}
 cur_time = 0
@@ -76,6 +77,7 @@ try:
         for note in hit_list:
             notes_played.remove(note)
 
+        highlight = {}
         for note in song:
             if note_visible(note, pygame.time.get_ticks(), HEIGHT*2/3):
                 s = border_box((key_width(note['note'])*WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), (note['stop'] - note['start'])/TIME_SCALE), 3, col1=channel_colors[note['channel']])
@@ -89,8 +91,7 @@ try:
                 note['status'] = 'played'
                 synth.send(mido.Message('note_off', note=note['note'], channel=note['channel']))
 
-        for octave in range(*OCTAVE_RANGE):
-            window.blit(draw_octave((WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), HEIGHT/3), octave, [note['note'] for note in notes_played if note['stop'] is None]), ((octave - OCTAVE_RANGE[0])*WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), HEIGHT*2/3))
+        window.blit(draw_octaves((WIDTH, HEIGHT/3), OCTAVE_RANGE, highlight), (0, HEIGHT*2/3))
 
         window.blit(font.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))
 

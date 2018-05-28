@@ -65,14 +65,20 @@ def key_width(key):
     else:
         return 1/12
 
-def draw_octave(size, octave, highlights=[]):
+def draw_octaves(size, octaves, highlight={}):
     s = pygame.Surface(size)
-    for key in whites:
-        key_surf = border_box((size[0]*key_width(key), size[1]), 3, col1=(255, 255, 224) if key + octave*12 in highlights else (255, 255, 255))
-        s.blit(key_surf, (size[0]*key_pos(key), 0))
-    for key in blacks:
-        key_surf = border_box((size[0]*key_width(key), size[1]*2/3), 3, col1=(255, 255, 224) if key + octave*12 in highlights else (0, 0, 0))
-        s.blit(key_surf, (size[0]*key_pos(key), 0))
+    octave_range = octaves[1] - octaves[0]
+    for octave in range(*octaves):
+        for i, key in enumerate(whites):
+            width = size[0]/(7*octave_range)
+            rect = ((i + (octave - octaves[0])*7)*width, 0, width, size[1])
+            pygame.draw.rect(s, (255, 255, 255), rect)
+            pygame.draw.rect(s, (0, 0, 0), rect, 3)
+        for i, key in enumerate(blacks):
+            width = size[0]/(12*octave_range)
+            rect = ((key + (octave - octaves[0])*12)*width, 0, width, size[1]*2/3)
+            pygame.draw.rect(s, (0, 0, 0), rect)
+            pygame.draw.rect(s, (0, 0, 0), rect, 3)
     return s
 
 def note_visible(note, time, vh):
