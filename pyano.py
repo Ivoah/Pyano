@@ -19,7 +19,7 @@ synth = mido.open_output()
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Helvetica', 12)
 
-midi_file = mido.MidiFile('Still Alive.mid')
+midi_file = mido.MidiFile('/Users/ivo/Music/MIDI/Still Alive.mid')
 song = []
 pending_notes = {}
 cur_time = 0
@@ -79,7 +79,8 @@ try:
         for note in song:
             if note_visible(note, pygame.time.get_ticks(), HEIGHT*2/3):
                 s = border_box((key_width(note['note'])*WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), (note['stop'] - note['start'])/TIME_SCALE), 3, col1=channel_colors[note['channel']])
-                window.blit(s, (((note['note']//12 - OCTAVE_RANGE[0]) + key_pos(note['note']))*WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), HEIGHT*2/3 - (note['stop'] - pygame.time.get_ticks())/TIME_SCALE))
+                pos = (((note['note']//12 - OCTAVE_RANGE[0]) + key_pos(note['note']))*WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), HEIGHT*2/3 - (note['stop'] - pygame.time.get_ticks())/TIME_SCALE)
+                window.blit(s, pos)
 
             if note['start'] <= pygame.time.get_ticks() and note['status'] == 'unplayed':
                 note['status'] = 'playing'
@@ -94,6 +95,6 @@ try:
         window.blit(font.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick()
 finally:
     pygame.quit()
