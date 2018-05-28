@@ -91,6 +91,9 @@ try:
                 note['status'] = 'played'
                 synth.send(mido.Message('note_off', note=note['note'], channel=note['channel']))
 
+            if note['status'] == 'playing':
+                highlight[note['note']] = note['channel']
+
         window.blit(draw_octaves((WIDTH, HEIGHT/3), OCTAVE_RANGE, highlight), (0, HEIGHT*2/3))
 
         window.blit(font.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))

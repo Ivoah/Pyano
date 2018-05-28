@@ -72,13 +72,21 @@ def draw_octaves(size, octaves, highlight={}):
         for i, key in enumerate(whites):
             width = size[0]/(7*octave_range)
             rect = ((i + (octave - octaves[0])*7)*width, 0, width, size[1])
-            pygame.draw.rect(s, (255, 255, 255), rect)
-            pygame.draw.rect(s, (0, 0, 0), rect, 3)
+            if key + octave*12 in highlight:
+                box = border_box(rect[2:], 3, channel_colors[highlight[key + octave*12]])
+                s.blit(box, rect[:2])
+            else:
+                pygame.draw.rect(s, (255, 255, 255), rect)
+                pygame.draw.rect(s, (0, 0, 0), rect, 3)
         for i, key in enumerate(blacks):
             width = size[0]/(12*octave_range)
             rect = ((key + (octave - octaves[0])*12)*width, 0, width, size[1]*2/3)
-            pygame.draw.rect(s, (0, 0, 0), rect)
-            pygame.draw.rect(s, (0, 0, 0), rect, 3)
+            if key + octave*12 in highlight:
+                box = border_box(rect[2:], 3, channel_colors[highlight[key + octave*12]])
+                s.blit(box, rect[:2])
+            else:
+                pygame.draw.rect(s, (0, 0, 0), rect)
+                pygame.draw.rect(s, (0, 0, 0), rect, 3)
     return s
 
 def note_visible(note, time, vh):
