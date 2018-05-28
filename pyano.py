@@ -95,6 +95,6 @@ try:
         window.blit(font.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))
 
         pygame.display.flip()
-        clock.tick()
+        clock.tick(60)
 finally:
     pygame.quit()
