@@ -42,6 +42,8 @@ for msg in midi_file:
         })
 
 song = sorted(song, key=lambda note: note['start'])
+playback_time = 0
+playing = True
 
 try:
     running = True
@@ -49,20 +51,24 @@ try:
         for event in pygame.event.get():
             if (event.type == KEYDOWN and event.mod == 1024 and event.key == 113) or event.type == QUIT:
                 running = False
+            elif event.type == KEYDOWN and event.key == K_SPACE:
+                playing = not playing
+
+        playback_time += clock.get_time() if playing else 0
 
         window.fill((0, 255, 255))
 
         highlight = {}
         for note in song:
-            if note_visible(note, pygame.time.get_ticks(), HEIGHT*2/3):
+            if note_visible(note, playback_time, HEIGHT*2/3):
                 s = border_box((key_width(note['note'])*WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), (note['stop'] - note['start'])/TIME_SCALE), 3, col1=channel_colors[note['channel']])
-                pos = (((note['note']//12 - OCTAVE_RANGE[0]) + key_pos(note['note']))*WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), HEIGHT*2/3 - (note['stop'] - pygame.time.get_ticks())/TIME_SCALE)
+                pos = (((note['note']//12 - OCTAVE_RANGE[0]) + key_pos(note['note']))*WIDTH/(OCTAVE_RANGE[1] - OCTAVE_RANGE[0]), HEIGHT*2/3 - (note['stop'] - playback_time)/TIME_SCALE)
                 window.blit(s, pos)
 
-            if note['start'] <= pygame.time.get_ticks() and note['status'] == 'unplayed':
+            if note['start'] <= playback_time and note['status'] == 'unplayed':
                 note['status'] = 'playing'
                 synth.send(mido.Message('note_on', note=note['note'], channel=note['channel'], velocity=note['velocity']))
-            elif note['stop'] <= pygame.time.get_ticks() and note['status'] == 'playing':
+            elif note['stop'] <= playback_time and note['status'] == 'playing':
                 note['status'] = 'played'
                 synth.send(mido.Message('note_off', note=note['note'], channel=note['channel']))
 
