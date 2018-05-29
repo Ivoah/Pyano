@@ -14,7 +14,8 @@ HEIGHT = 480
 
 pygame.init()
 
-window = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Pyano')
+window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 synth = mido.open_output()
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Helvetica', 12)
