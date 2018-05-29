@@ -14,7 +14,8 @@ HEIGHT = 480
 
 pygame.init()
 
-pygame.display.set_caption('Pyano')
+pygame.display.set_icon(pygame.image.load('icon.png'))
+pygame.display.set_caption('Pyano', 'Pyano')
 window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 synth = mido.open_output()
 clock = pygame.time.Clock()
@@ -54,7 +55,7 @@ try:
             elif event.type == KEYDOWN and event.key == K_SPACE:
                 playing = not playing
 
-        playback_time += clock.get_time() if playing else 0
+        if playing: playback_time += clock.get_time()
 
         window.fill((0, 255, 255))
 
