@@ -17,9 +17,13 @@ pygame.init()
 pygame.display.set_icon(pygame.image.load('icon.png'))
 pygame.display.set_caption('Pyano', 'Pyano')
 window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-synth = mido.open_output()
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Helvetica', 12)
+
+print(mido.get_input_names(), mido.get_output_names())
+
+keyboard = mido.open_input('USB2.0-MIDI Port 1')
+synth = mido.open_output('SimpleSynth virtual input')
 
 midi_file = mido.MidiFile(sys.argv[1])
 song = []
@@ -46,6 +50,8 @@ song = sorted(song, key=lambda note: note['start'])
 playback_time = 0
 playing = True
 
+notes_played = {}
+
 try:
     running = True
     while running:
@@ -59,6 +65,13 @@ try:
 
         window.fill((0, 255, 255))
 
+        for msg in keyboard.iter_pending():
+            synth.send(msg)
+            if msg.type == 'note_on' and msg.velocity > 0:
+                notes_played[msg.note] = msg.channel
+            elif msg.type == 'note_off' or msg.type == 'note_on' and msg.velocity == 0:
+                del notes_played[msg.note]
+
         highlight = {}
         for note in song:
             if note_visible(note, playback_time, HEIGHT*2/3):
@@ -67,8 +80,12 @@ try:
                 window.blit(s, pos)
 
             if note['start'] <= playback_time and note['status'] == 'unplayed':
-                note['status'] = 'playing'
-                synth.send(mido.Message('note_on', note=note['note'], channel=note['channel'], velocity=note['velocity']))
+                if note['note'] in notes_played.keys() or note['channel'] != 0:
+                    playing = True
+                    note['status'] = 'playing'
+                    synth.send(mido.Message('note_on', note=note['note'], channel=note['channel'], velocity=note['velocity']))
+                else:
+                    playing = False
             elif note['stop'] <= playback_time and note['status'] == 'playing':
                 note['status'] = 'played'
                 synth.send(mido.Message('note_off', note=note['note'], channel=note['channel']))
@@ -76,7 +93,7 @@ try:
             if note['status'] == 'playing':
                 highlight[note['note']] = note['channel']
 
-        window.blit(draw_octaves((WIDTH, HEIGHT/3), OCTAVE_RANGE, highlight), (0, HEIGHT*2/3))
+        window.blit(draw_octaves((WIDTH, HEIGHT/3), OCTAVE_RANGE, {**highlight, **notes_played}), (0, HEIGHT*2/3))
 
         window.blit(font.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))
 
