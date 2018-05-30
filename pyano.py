@@ -70,7 +70,8 @@ try:
             if msg.type == 'note_on' and msg.velocity > 0:
                 notes_played[msg.note] = msg.channel
             elif msg.type == 'note_off' or msg.type == 'note_on' and msg.velocity == 0:
-                del notes_played[msg.note]
+                if msg.note in notes_played:
+                    del notes_played[msg.note]
 
         highlight = {}
         for note in song:
