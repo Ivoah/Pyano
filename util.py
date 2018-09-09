@@ -27,7 +27,8 @@ channel_colors = [
 def fill_gradient(surface, c1, c2, rect=None):
     lerp = lambda a, b, r: a + (b - a)*r
 
-    if rect is None: rect = surface.get_rect()
+    if type(rect) is tuple: rect = pygame.Rect(*rect)
+    elif rect is None: rect = surface.get_rect()
 
     for column in range(rect.width):
         c = (
