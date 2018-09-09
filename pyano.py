@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import mido
 import pygame
@@ -14,15 +15,17 @@ HEIGHT = 480
 
 pygame.init()
 
-pygame.display.set_icon(pygame.image.load('icon.png'))
+pygame.display.set_icon(pygame.image.load(os.path.join(os.path.dirname(__file__), 'icon.png')))
 pygame.display.set_caption('Pyano', 'Pyano')
 window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 clock = pygame.time.Clock()
-font = pygame.font.SysFont('Helvetica', 12)
+font_small = pygame.font.SysFont('Helvetica', 12)
+font_large = pygame.font.SysFont('Helvetica', 48)
 
-print(mido.get_input_names(), mido.get_output_names())
-
-keyboard = mido.open_input('USB2.0-MIDI Port 1')
+if len(mido.get_input_names()) > 0:
+    keyboard = mido.open_input(mido.get_input_names()[0])
+else:
+    keyboard = None
 synth = mido.open_output('SimpleSynth virtual input')
 
 midi_file = mido.MidiFile(sys.argv[1])
@@ -65,13 +68,14 @@ try:
 
         window.fill((0, 255, 255))
 
-        for msg in keyboard.iter_pending():
-            synth.send(msg)
-            if msg.type == 'note_on' and msg.velocity > 0:
-                notes_played[msg.note] = msg.channel
-            elif msg.type == 'note_off' or msg.type == 'note_on' and msg.velocity == 0:
-                if msg.note in notes_played:
-                    del notes_played[msg.note]
+        if keyboard is not None:
+            for msg in keyboard.iter_pending():
+                synth.send(msg)
+                if msg.type == 'note_on' and msg.velocity > 0:
+                    notes_played[msg.note] = msg.channel
+                elif msg.type == 'note_off' or msg.type == 'note_on' and msg.velocity == 0:
+                    if msg.note in notes_played:
+                        del notes_played[msg.note]
 
         highlight = {}
         for note in song:
@@ -81,7 +85,7 @@ try:
                 window.blit(s, pos)
 
             if note['start'] <= playback_time and note['status'] == 'unplayed':
-                if note['note'] in notes_played.keys() or note['channel'] != 0:
+                if keyboard is None or note['note'] in notes_played.keys() or note['channel'] != 0:
                     playing = True
                     note['status'] = 'playing'
                     synth.send(mido.Message('note_on', note=note['note'], channel=note['channel'], velocity=note['velocity']))
@@ -96,7 +100,7 @@ try:
 
         window.blit(draw_octaves((WIDTH, HEIGHT/3), OCTAVE_RANGE, {**highlight, **notes_played}), (0, HEIGHT*2/3))
 
-        window.blit(font.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))
+        #window.blit(font_small.render(str(clock.get_fps()), True, (0, 0, 0)), (10, 10))
 
         pygame.display.flip()
         clock.tick(60)
