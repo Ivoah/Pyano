@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
+from util import *
+
 import os
 import sys
 import mido
-import pygame
+
+with suppress_stdout():
+    import pygame
 
 from pygame.locals import *
 
-from util import *
 
 OCTAVE_RANGE = [5, 6]
 WIDTH = 640
@@ -33,7 +36,10 @@ song = []
 pending_notes = {}
 cur_time = 0
 
-for msg in midi_file:
+window.fill((0, 255, 255))
+window.blit(border_box((WIDTH/3, 64), 5, channel_colors[1]), (WIDTH/2 - WIDTH/3/2, HEIGHT/2 - 64/2))
+num_messages = sum(map(len, midi_file.tracks))
+for i, msg in enumerate(midi_file):
     cur_time += msg.time
     if msg.type == 'note_on' and msg.velocity > 0:
         pending_notes[(msg.channel, msg.note)] = [cur_time, msg.velocity]
@@ -48,6 +54,11 @@ for msg in midi_file:
             'stop': cur_time*1000,
             'status': 'unplayed'
         })
+    
+    if i%100 == 0:
+        window.blit(border_box((WIDTH/3*(i/num_messages), 64), 5, channel_colors[0]), (WIDTH/2 - WIDTH/3/2, HEIGHT/2 - 64/2))
+        pygame.display.flip()
+        pygame.event.pump()
 
 song = sorted(song, key=lambda note: note['start'])
 playback_time = 0

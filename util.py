@@ -1,5 +1,20 @@
-import pygame
 import random
+from contextlib import contextmanager
+import sys, os
+
+# From http://thesmithfam.org/blog/2012/10/25/temporarily-suppress-console-output-in-python/
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
+
+with suppress_stdout():
+    import pygame
 
 TIME_SCALE = 5
 
